@@ -6,7 +6,7 @@
   "license": "Copyright 2013, Hack Reactor. All rights reserved.",
   "scripts": {
     "start": "node server/basic-server.js",
-    "test": "mocha server/spec"
+    "test": "mocha server/spec -b"
   },
   "devDependencies": {
     "mocha": "^1.21.4",

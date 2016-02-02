@@ -12,8 +12,8 @@ this file and include it in basic-server.js so that it actually works.
 
 **************************************************************/
 var data = [];
-var paths = ['/', '/classes/messages', '/classes'];
- module.exports = function(request, response) {
+var paths = ['/', '/classes/messages', '/classes', '/classes/room1', '/classes/messages?order=-createdAt'];
+var requestHandler = function(request, response) {
   // Request and Response come from node's http module.
   
   // They include information about both the incoming request, such as
@@ -41,20 +41,25 @@ var paths = ['/', '/classes/messages', '/classes'];
       fullBody += chunk;
     });
     request.on('end', function() {
-      console.log(fullBody);
       data.push(JSON.parse(fullBody));
     });
     statusCode = 201;
-  } 
+  } else if (request.method === 'OPTIONS') {
+    statusCode = 200;
+
+  }
 
   if(paths.indexOf(request.url) === -1) {
-    console.log('made it into hard coder');
+    console.log('our url', request.url);
     statusCode = 404;
   }
+  console.log(request.url);
   // See the note below about CORS headers.
   var headers = defaultCorsHeaders;
  
   // Tell the client we are sending them plain text.
+
+
   //
   // You will need to change this if you are sending something
   // other than plain text, like JSON or HTML.
@@ -98,6 +103,7 @@ var paths = ['/', '/classes/messages', '/classes'];
    var responseObject = {
     results: data,
   };
+  console.log(responseObject);
 
   response.end(JSON.stringify(responseObject));
 
@@ -117,7 +123,8 @@ var paths = ['/', '/classes/messages', '/classes'];
 var defaultCorsHeaders = {
   "access-control-allow-origin": "*",
   "access-control-allow-methods": "GET, POST, PUT, DELETE, OPTIONS",
-  "access-control-allow-headers": "content-type, accept",
+  "access-control-allow-headers": "content-type, accept, x-parse-application-id,x-parse-rest-api-key",
   "access-control-max-age": 10 // Seconds.
 };
 
+exports.requestHandler = requestHandler;
