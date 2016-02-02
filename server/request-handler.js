@@ -11,10 +11,11 @@ this file and include it in basic-server.js so that it actually works.
 *Hint* Check out the node module documentation at http://nodejs.org/api/modules.html.
 
 **************************************************************/
-
-var requestHandler = function(request, response) {
+var data = [];
+var paths = ['/', '/classes/messages', '/classes'];
+ module.exports = function(request, response) {
   // Request and Response come from node's http module.
-  //
+  
   // They include information about both the incoming request, such as
   // headers and URL, and about the outgoing response, such as its status
   // and content.
@@ -27,22 +28,63 @@ var requestHandler = function(request, response) {
   // Adding more logging to your server can be an easy way to get passive
   // debugging help, but you should always be careful about leaving stray
   // console.logs in your code.
+  // var querystring = require('querystring');
+  // var utils = require('utils');
+  var statusCode;
   console.log("Serving request type " + request.method + " for url " + request.url);
-
   // The outgoing status.
-  var statusCode = 200;
+  if (request.method === 'GET') {
+    statusCode = 200;
+  } else if (request.method === 'POST') {
+    var fullBody = '';
+    request.on('data', function(chunk) {
+      fullBody += chunk;
+    });
+    request.on('end', function() {
+      console.log(fullBody);
+      data.push(JSON.parse(fullBody));
+    });
+    statusCode = 201;
+  } 
 
+  if(paths.indexOf(request.url) === -1) {
+    console.log('made it into hard coder');
+    statusCode = 404;
+  }
   // See the note below about CORS headers.
   var headers = defaultCorsHeaders;
-
+ 
   // Tell the client we are sending them plain text.
   //
   // You will need to change this if you are sending something
   // other than plain text, like JSON or HTML.
-  headers['Content-Type'] = "text/plain";
+  // headers['Content-Type'] = "text/plain";
 
   // .writeHead() writes to the request line and headers of the response,
   // which includes the status and all headers.
+  headers['Content-Type'] = "text/plain";
+  
+  // var fs = require("fs");
+  // var path = require("path");
+  // var url = require("url");
+  // var port = process.env.port || 1337;
+  // var urlParts = url.parse(request.url).pathname;
+
+  // fs.exists(urlParts, function fileExists(exists) {
+  //   if (!exists) {
+  //     statusCode = 404;
+  //     }
+  // });
+
+  // fs.stat(request.url, function(error, stats){
+  //   if (error && error.code == "ENOENT") {
+  //     statusCode = 404;
+  //     response.writeHead(statusCode, headers);
+  //   } else {
+  //     response.writeHead(statusCode, headers);
+  //   }
+  // });
+  
   response.writeHead(statusCode, headers);
 
   // Make sure to always call response.end() - Node may not send
@@ -52,7 +94,15 @@ var requestHandler = function(request, response) {
   //
   // Calling .end "flushes" the response's internal buffer, forcing
   // node to actually send all the data over to the client.
-  response.end("Hello, World!");
+
+   var responseObject = {
+    results: data,
+  };
+
+  response.end(JSON.stringify(responseObject));
+
+ 
+ 
 };
 
 // These headers will allow Cross-Origin Resource Sharing (CORS).
